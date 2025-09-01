@@ -18,9 +18,9 @@ const GITHUB_SETTINGS_KEY = 'salon_github_settings';
 const sampleData = [
     {
         id: 1,
-        name: "Sarah Johnson",
-        phone: "+1-555-0123",
-        email: "sarah.johnson@email.com",
+        name: "Musaddiq Ahamed",
+        phone: "+91 9902042590",
+        email: "musaddiq749@email.com",
         address: "123 Main St, City",
         subscriptionType: "Yearly",
         startDate: "2025-01-15",
@@ -33,9 +33,9 @@ const sampleData = [
     },
     {
         id: 2,
-        name: "Maria Garcia",
+        name: "Syed Bilal",
         phone: "+1-555-0456",
-        email: "maria.garcia@email.com",
+        email: "Syed@email.com",
         address: "456 Oak Ave, City",
         subscriptionType: "Half-yearly",
         startDate: "2025-03-10",
@@ -48,9 +48,9 @@ const sampleData = [
     },
     {
         id: 3,
-        name: "Jennifer Smith",
+        name: "Haseeb Ahamed Khan",
         phone: "+1-555-0789",
-        email: "jen.smith@email.com",
+        email: "haseeb@email.com",
         address: "789 Pine Rd, City",
         subscriptionType: "Monthly",
         startDate: "2025-08-01",
