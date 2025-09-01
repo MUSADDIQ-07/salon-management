@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Salon - Subscriber Management with GitHub Integration</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Backup Reminder Notification -->
+    <div id="backupNotification" class="backup-notification hidden">
+        <div class="notification-content">
+            <div class="notification-icon">
+                <i class="fab fa-github"></i>
+            </div>
+            <div class="notification-text">
+                <h4>Time for GitHub Backup!</h4>
+                <p>It's been a while since your last backup. Keep your data safe!</p>
+            </div>
+            <div class="notification-actions">
+                <button class="btn btn--primary btn--sm" onclick="openGitHubExportModal()">
+                    Backup Now
+                </button>
+                <button class="btn btn--outline btn--sm" onclick="dismissBackupNotification()">
+                    Remind Later
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cut"></i>
+                    <h1>Elite Salon</h1>
+                    <span class="github-badge">
+                        <i class="fab fa-github"></i> GitHub Ready
+                    </span>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-tab="dashboard">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </button>
+                    <button class="nav-btn" data-tab="add-subscriber">
+                        <i class="fas fa-user-plus"></i> Add Subscriber
+                    </button>
+                    <button class="nav-btn" data-tab="view-all">
+                        <i class="fas fa-users"></i> View All
+                    </button>
+                    <button class="nav-btn" data-tab="github-sync">
+                        <i class="fab fa-github"></i> GitHub Sync
+                    </button>
+                    <button class="nav-btn" data-tab="reports">
+                        <i class="fas fa-chart-pie"></i> Reports
+                    </button>
+                    <button class="nav-btn" data-tab="settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <div class="dashboard-header">
+                    <h2>Dashboard Overview</h2>
+                    <div class="dashboard-actions">
+                        <button class="btn btn--outline" onclick="openGitHubExportModal()">
+                            <i class="fab fa-github"></i> Export to GitHub
+                        </button>
+                        <button class="btn btn--outline" id="quickExportBtn">
+                            <i class="fas fa-download"></i> Quick Export
+                        </button>
+                        <button class="btn btn--outline" id="clearDataBtn">
+                            <i class="fas fa-trash"></i> Clear All Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalSubscribers">0</h3>
+                            <p>Total Subscribers</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="activeSubscriptions">0</h3>
+                            <p>Active Subscriptions</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="expiringSubscriptions">0</h3>
+                            <p>Expiring Soon</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="lastBackupDate">Never</h3>
+                            <p>Last GitHub Backup</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="chart-section">
+                        <div class="card">
+                            <div class="card__body">
+                                <h3>Subscription Types Distribution</h3>
+                                <div class="chart-container" style="position: relative; height: 300px;">
+                                    <canvas id="subscriptionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-section">
+                        <div class="card">
+                            <div class="card__body">
+                                <h3>Recent Subscribers</h3>
+                                <div id="recentSubscribers">
+                                    <!-- Recent subscribers will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card__body">
+                                <h3>GitHub Sync Status</h3>
+                                <div id="githubSyncStatus" class="sync-status-container">
+                                    <div class="sync-status-item">
+                                        <i class="fab fa-github"></i>
+                                        <span>Ready for Backup</span>
+                                        <div class="status-badge status-badge--info">Synced</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add Subscriber Tab -->
+            <section id="add-subscriber" class="tab-content">
+                <div class="form-header">
+                    <h2>Add New Subscriber</h2>
+                    <div class="github-auto-backup">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoBackupCheckbox" checked>
+                            <span>Auto-suggest GitHub backup after adding</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card__body">
+                        <form id="subscriberForm" class="subscriber-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="name">Full Name *</label>
+                                    <input type="text" id="name" name="name" class="form-control" required>
+                                    <div class="error-message" id="nameError"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="phone">Phone Number *</label>
+                                    <input type="tel" id="phone" name="phone" class="form-control" required>
+                                    <div class="error-message" id="phoneError"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="email">Email Address</label>
+                                    <input type="email" id="email" name="email" class="form-control">
+                                    <div class="error-message" id="emailError"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="subscriptionType">Subscription Type</label>
+                                    <select id="subscriptionType" name="subscriptionType" class="form-control">
+                                        <option value="Monthly">Monthly</option>
+                                        <option value="Quarterly">Quarterly</option>
+                                        <option value="Half-yearly">Half-yearly</option>
+                                        <option value="Yearly">Yearly</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="address">Address</label>
+                                <textarea id="address" name="address" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="startDate">Subscription Start Date</label>
+                                    <input type="date" id="startDate" name="startDate" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="amount">Amount Paid</label>
+                                    <input type="number" id="amount" name="amount" class="form-control" min="0" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Services Included</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Haircut">
+                                        <span>Haircut</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Hair Color">
+                                        <span>Hair Color</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Facial">
+                                        <span>Facial</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Manicure">
+                                        <span>Manicure</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Pedicure">
+                                        <span>Pedicure</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Massage">
+                                        <span>Massage</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="services" value="Other">
+                                        <span>Other</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="paymentMethod">Payment Method</label>
+                                    <select id="paymentMethod" name="paymentMethod" class="form-control">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Card">Card</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Bank Transfer">Bank Transfer</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="notes">Notes/Comments</label>
+                                <textarea id="notes" name="notes" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn--primary">
+                                    <i class="fas fa-save"></i> Add Subscriber
+                                </button>
+                                <button type="reset" class="btn btn--secondary">
+                                    <i class="fas fa-times"></i> Clear Form
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View All Tab -->
+            <section id="view-all" class="tab-content">
+                <div class="table-header">
+                    <h2>All Subscribers</h2>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search by name, phone, or email..." class="form-control">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <select id="filterSubscriptionType" class="form-control">
+                            <option value="">All Types</option>
+                            <option value="Monthly">Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Half-yearly">Half-yearly</option>
+                            <option value="Yearly">Yearly</option>
+                        </select>
+                        <select id="filterStatus" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="expired">Expired</option>
+                            <option value="expiring">Expiring Soon</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table id="subscribersTable" class="subscribers-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="name">Name <i class="fas fa-sort"></i></th>
+                                    <th data-sort="phone">Phone <i class="fas fa-sort"></i></th>
+                                    <th data-sort="subscriptionType">Type <i class="fas fa-sort"></i></th>
+                                    <th data-sort="startDate">Start Date <i class="fas fa-sort"></i></th>
+                                    <th data-sort="status">Status <i class="fas fa-sort"></i></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscribersTableBody">
+                                <!-- Table content will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be populated here -->
+                </div>
+            </section>
+
+            <!-- GitHub Sync Tab -->
+            <section id="github-sync" class="tab-content">
+                <div class="github-header">
+                    <h2>
+                        <i class="fab fa-github"></i>
+                        GitHub Integration & Sync
+                    </h2>
+                    <p class="github-subtitle">Backup, synchronize, and manage your subscriber data with GitHub</p>
+                </div>
+
+                <div class="github-grid">
+                    <!-- Export & Backup Section -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-upload"></i> Export & Backup</h3>
+                            
+                            <div class="export-options">
+                                <div class="export-format">
+                                    <div class="format-header">
+                                        <i class="fas fa-file-code"></i>
+                                        <strong>subscribers.json</strong>
+                                        <span class="format-badge">JSON</span>
+                                    </div>
+                                    <p>Complete subscriber database in JSON format</p>
+                                    <button class="btn btn--outline btn--sm" onclick="exportJSON()">
+                                        <i class="fas fa-download"></i> Generate
+                                    </button>
+                                </div>
+
+                                <div class="export-format">
+                                    <div class="format-header">
+                                        <i class="fab fa-markdown"></i>
+                                        <strong>SALON_DATA.md</strong>
+                                        <span class="format-badge">Markdown</span>
+                                    </div>
+                                    <p>Formatted report with tables and statistics</p>
+                                    <button class="btn btn--outline btn--sm" onclick="exportMarkdown()">
+                                        <i class="fas fa-download"></i> Generate
+                                    </button>
+                                </div>
+
+                                <div class="export-format">
+                                    <div class="format-header">
+                                        <i class="fas fa-file-csv"></i>
+                                        <strong>subscribers.csv</strong>
+                                        <span class="format-badge">CSV</span>
+                                    </div>
+                                    <p>Spreadsheet-compatible CSV file</p>
+                                    <button class="btn btn--outline btn--sm" onclick="exportCSV()">
+                                        <i class="fas fa-download"></i> Generate
+                                    </button>
+                                </div>
+
+                                <div class="export-format">
+                                    <div class="format-header">
+                                        <i class="fas fa-code"></i>
+                                        <strong>index.html</strong>
+                                        <span class="format-badge">HTML</span>
+                                    </div>
+                                    <p>GitHub Pages compatible HTML file</p>
+                                    <button class="btn btn--outline btn--sm" onclick="exportHTML()">
+                                        <i class="fas fa-download"></i> Generate
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="export-all-section">
+                                <button class="btn btn--primary" onclick="exportAllFormats()">
+                                    <i class="fab fa-github"></i> Export All for GitHub
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Instructions Section -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-book"></i> GitHub Upload Instructions</h3>
+                            
+                            <div class="instruction-method">
+                                <h4><i class="fas fa-mouse-pointer"></i> Using GitHub Web Interface</h4>
+                                <ol class="instruction-list">
+                                    <li>Export your files using the buttons above</li>
+                                    <li>Go to your GitHub repository</li>
+                                    <li>Click "Add file" → "Upload files"</li>
+                                    <li>Drag and drop the exported files</li>
+                                    <li>Add commit message: "Update salon data - [date]"</li>
+                                    <li>Click "Commit changes"</li>
+                                </ol>
+                            </div>
+
+                            <div class="instruction-method">
+                                <h4><i class="fas fa-terminal"></i> Using Git Commands</h4>
+                                <div class="code-block">
+                                    <code id="gitCommands">
+git add subscribers.json SALON_DATA.md subscribers.csv index.html<br>
+git commit -m "Update salon subscriber data - $(date +%Y-%m-%d)"<br>
+git push origin main
+                                    </code>
+                                    <button class="copy-btn" onclick="copyGitCommands()">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Import & Restore Section -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-download"></i> Import & Restore</h3>
+                            
+                            <div class="import-section">
+                                <p>Import subscriber data from GitHub backup files:</p>
+                                
+                                <div class="import-actions">
+                                    <button class="btn btn--secondary" id="importJSONBtn">
+                                        <i class="fas fa-file-import"></i> Import JSON Backup
+                                    </button>
+                                    <input type="file" id="importJSONFile" accept=".json" style="display: none;">
+                                    
+                                    <button class="btn btn--secondary" id="importCSVBtn">
+                                        <i class="fas fa-file-csv"></i> Import CSV File
+                                    </button>
+                                    <input type="file" id="importCSVFile" accept=".csv" style="display: none;">
+                                </div>
+                                
+                                <div class="import-info">
+                                    <p><small><i class="fas fa-info-circle"></i> Importing will merge data with existing subscribers. Duplicates will be detected and handled.</small></p>
+                                </div>
+                            </div>
+
+                            <div class="sync-comparison" id="syncComparison" style="display: none;">
+                                <h4>Data Comparison</h4>
+                                <div class="comparison-results" id="comparisonResults">
+                                    <!-- Comparison results will be shown here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sync Status Section -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-sync-alt"></i> Sync Status & History</h3>
+                            
+                            <div class="sync-stats">
+                                <div class="sync-stat">
+                                    <div class="sync-stat-label">Last Export:</div>
+                                    <div class="sync-stat-value" id="lastExportTime">Never</div>
+                                </div>
+                                <div class="sync-stat">
+                                    <div class="sync-stat-label">Changes Since Last Export:</div>
+                                    <div class="sync-stat-value" id="changesSinceExport">0</div>
+                                </div>
+                                <div class="sync-stat">
+                                    <div class="sync-stat-label">Backup Reminder:</div>
+                                    <div class="sync-stat-value" id="backupReminderStatus">Enabled</div>
+                                </div>
+                            </div>
+
+                            <div class="sync-actions">
+                                <button class="btn btn--outline" onclick="checkForChanges()">
+                                    <i class="fas fa-search"></i> Check for Changes
+                                </button>
+                                <button class="btn btn--outline" onclick="generateChangeLog()">
+                                    <i class="fas fa-list-alt"></i> Generate Change Log
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Tab -->
+            <section id="reports" class="tab-content">
+                <div class="reports-header">
+                    <h2>Reports & Analytics</h2>
+                </div>
+
+                <div class="reports-grid">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Monthly Revenue Trend</h3>
+                            <div class="chart-container" style="position: relative; height: 250px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Services Popularity</h3>
+                            <div class="chart-container" style="position: relative; height: 250px;">
+                                <canvas id="servicesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Payment Methods</h3>
+                            <div id="paymentMethodsReport">
+                                <!-- Payment methods breakdown will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Subscription Status Summary</h3>
+                            <div id="statusSummary">
+                                <!-- Status summary will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings" class="tab-content">
+                <div class="settings-header">
+                    <h2>Settings & Data Management</h2>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- GitHub Settings -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fab fa-github"></i> GitHub Integration Settings</h3>
+                            
+                            <div class="settings-section">
+                                <h4>Backup Preferences</h4>
+                                <div class="settings-controls">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="enableBackupReminders" checked>
+                                        <span>Enable backup reminders</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="autoExportAfterAdd" checked>
+                                        <span>Suggest export after adding subscribers</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="compressExports">
+                                        <span>Compress large export files</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h4>Export Format Preferences</h4>
+                                <div class="settings-controls">
+                                    <label class="form-label">Default Export Formats:</label>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="defaultFormats" value="json" checked>
+                                            <span>JSON</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="defaultFormats" value="csv" checked>
+                                            <span>CSV</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="defaultFormats" value="markdown" checked>
+                                            <span>Markdown</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="defaultFormats" value="html">
+                                            <span>HTML</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Management Section -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-database"></i> Data Management</h3>
+                            
+                            <div class="settings-section">
+                                <h4>Local Storage</h4>
+                                <div class="settings-actions">
+                                    <button class="btn btn--outline" id="backupBtn">
+                                        <i class="fas fa-download"></i> Create Local Backup
+                                    </button>
+                                    <button class="btn btn--secondary" id="restoreBtn">
+                                        <i class="fas fa-upload"></i> Restore from Backup
+                                    </button>
+                                    <input type="file" id="restoreFile" accept=".json" style="display: none;">
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h4>Data Operations</h4>
+                                <div class="settings-actions">
+                                    <button class="btn btn--outline btn--warning" id="clearDataBtn">
+                                        <i class="fas fa-trash"></i> Clear All Data
+                                    </button>
+                                </div>
+                                
+                                <div class="settings-info">
+                                    <p><small><i class="fas fa-exclamation-triangle"></i> Warning: This action cannot be undone. Make sure to backup your data first.</small></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Information -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-hdd"></i> Storage Information</h3>
+                            
+                            <div id="storageInfo" class="storage-info-grid">
+                                <!-- Storage info will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Application Information -->
+                    <div class="card">
+                        <div class="card__body">
+                            <h3><i class="fas fa-info-circle"></i> Application Info</h3>
+                            
+                            <div class="app-info">
+                                <div class="info-item">
+                                    <span class="info-label">Application:</span>
+                                    <span class="info-value">Elite Salon Management</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Version:</span>
+                                    <span class="info-value">2.0 - GitHub Edition</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">GitHub Integration:</span>
+                                    <span class="info-value status-badge--active">Enabled</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Data Persistence:</span>
+                                    <span class="info-value status-badge--active">Enabled</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- GitHub Export Modal -->
+    <div id="githubExportModal" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3><i class="fab fa-github"></i> Export for GitHub</h3>
+                <button class="modal-close" onclick="closeGitHubExportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="export-progress" id="exportProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="progressText">Preparing export...</p>
+                </div>
+
+                <div class="export-formats-grid" id="exportFormatsGrid">
+                    <div class="export-format-card">
+                        <div class="format-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <h4>subscribers.json</h4>
+                        <p>Complete database in JSON format</p>
+                        <button class="btn btn--outline" onclick="exportSingleFormat('json')">
+                            Generate
+                        </button>
+                    </div>
+
+                    <div class="export-format-card">
+                        <div class="format-icon">
+                            <i class="fab fa-markdown"></i>
+                        </div>
+                        <h4>SALON_DATA.md</h4>
+                        <p>Formatted report with statistics</p>
+                        <button class="btn btn--outline" onclick="exportSingleFormat('markdown')">
+                            Generate
+                        </button>
+                    </div>
+
+                    <div class="export-format-card">
+                        <div class="format-icon">
+                            <i class="fas fa-file-csv"></i>
+                        </div>
+                        <h4>subscribers.csv</h4>
+                        <p>Spreadsheet-compatible file</p>
+                        <button class="btn btn--outline" onclick="exportSingleFormat('csv')">
+                            Generate
+                        </button>
+                    </div>
+
+                    <div class="export-format-card">
+                        <div class="format-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h4>index.html</h4>
+                        <p>GitHub Pages compatible</p>
+                        <button class="btn btn--outline" onclick="exportSingleFormat('html')">
+                            Generate
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--primary" onclick="exportAllFormats()">
+                    <i class="fab fa-github"></i> Export All Files
+                </button>
+                <button class="btn btn--secondary" onclick="closeGitHubExportModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Subscriber Modal -->
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Subscriber</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editSubscriberForm" class="subscriber-form">
+                    <input type="hidden" id="editId" name="id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="editName">Full Name *</label>
+                            <input type="text" id="editName" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editPhone">Phone Number *</label>
+                            <input type="tel" id="editPhone" name="phone" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="editEmail">Email Address</label>
+                            <input type="email" id="editEmail" name="email" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editSubscriptionType">Subscription Type</label>
+                            <select id="editSubscriptionType" name="subscriptionType" class="form-control">
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly</option>
+                                <option value="Half-yearly">Half-yearly</option>
+                                <option value="Yearly">Yearly</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="editAddress">Address</label>
+                        <textarea id="editAddress" name="address" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="editStartDate">Subscription Start Date</label>
+                            <input type="date" id="editStartDate" name="startDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editAmount">Amount Paid</label>
+                            <input type="number" id="editAmount" name="amount" class="form-control" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Services Included</label>
+                        <div class="checkbox-group" id="editServices">
+                            <!-- Services checkboxes will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="editPaymentMethod">Payment Method</label>
+                            <select id="editPaymentMethod" name="paymentMethod" class="form-control">
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="editNotes">Notes/Comments</label>
+                        <textarea id="editNotes" name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn--primary">
+                            <i class="fas fa-save"></i> Update Subscriber
+                        </button>
+                        <button type="button" class="btn btn--secondary" id="cancelEdit">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--primary" id="confirmYes">Yes</button>
+                <button class="btn btn--secondary" id="confirmNo">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
